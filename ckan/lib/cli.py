@@ -972,6 +972,7 @@ class DatasetCmd(CkanCommand):
       dataset list                       - lists datasets
       dataset delete [DATASET_NAME|ID]   - changes dataset state to 'deleted'
       dataset purge [DATASET_NAME|ID]    - removes dataset from db entirely
+      dataset purge_all                  - removes all deleted datasets entirely
     '''
     summary = __doc__.split('\n')[0]
     usage = __doc__
@@ -989,6 +990,8 @@ class DatasetCmd(CkanCommand):
                 self.delete(self.args[1])
             elif cmd == 'purge':
                 self.purge(self.args[1])
+            elif cmd == 'purge_all':
+                self.purge_all()
             elif cmd == 'list':
                 self.list()
             elif cmd == 'show':
@@ -1038,6 +1041,26 @@ class DatasetCmd(CkanCommand):
             context, {'id': dataset_ref})
         print('%s purged' % name)
 
+    def purge_all(self):
+        import ckan.logic as logic
+        import ckan.model as model
+
+        site_user = logic.get_action('get_site_user')({'ignore_auth': True}, {})
+        context = {'user': site_user['name']}
+
+        while True:
+            packages = model.Session.query(
+                model.Package).filter_by(state=model.State.DELETED).limit(100)
+
+            if not packages.count():
+                break
+
+            for pkg in packages:
+                logic.get_action('dataset_purge')(
+                    context, {'id': pkg.id})
+                print('%s purged' % pkg.name)
+
+            model.Session.commit()
 
 class Ratings(CkanCommand):
     '''Manage the ratings stored in the db

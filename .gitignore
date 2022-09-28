@@ -54,3 +54,4 @@ junit
 .coverage*
 .cache
 .bash_history
+.npm

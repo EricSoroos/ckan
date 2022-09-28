@@ -15,7 +15,7 @@ service jetty9 start
 
 #Python Dependencies
 pip install -r requirement-setuptools.txt
-pip install -r requirements.txt
+pip install -r requirements-py2.txt
 pip install -r dev-requirements.txt
 python setup.py develop
 pip check

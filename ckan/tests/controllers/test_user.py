@@ -885,6 +885,7 @@ class TestUser(object):
 
         assert "Error sending the email" in response
 
+
     def test_sysadmin_not_authorized(self, app):
         user = factories.User()
         env = {"REMOTE_USER": user["name"].encode("ascii")}
@@ -1037,6 +1038,21 @@ class TestUser(object):
 
         userobj = model.User.get(userobj.id)
         assert userobj.is_deleted(), userobj
+
+    @pytest.mark.ckan_config(u"ckan.auth.public_user_details", u"false")
+    def test_request_reset_public_user_details(self, app):
+        user = factories.User()
+        user_obj = helpers.model.User.by_name(user["name"])
+        create_reset_key(user_obj)
+        key = user_obj.reset_key
+        offset = url_for(
+            controller="user",
+            action="perform_reset",
+            id=user_obj.id,
+            key=key,
+        )
+        response = app.get(offset)
+        assert "Reset Your Password" in response
 
 
 @pytest.mark.usefixtures("clean_db", "with_request_context")
